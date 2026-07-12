@@ -1,138 +1,411 @@
 # 📌 Overview
 
-**AssetFlow** — Enterprise Asset & Resource Management System
+AssetFlow is a modern Enterprise Asset & Resource Management System (ERP) that helps organizations efficiently manage their physical assets and shared resources.
 
-A comprehensive monorepo application for managing enterprise assets, resources, allocations, bookings, maintenance, audits, and reporting. Built with modern web technologies for scalability and maintainability.
+The system enables organizations to register assets, allocate them to employees or departments, manage maintenance workflows, schedule resource bookings, perform audits, and monitor operations through dashboards and reports.
 
-## 🚀 Tech Stack
+Unlike traditional spreadsheet-based asset tracking, AssetFlow provides a centralized, secure, and role-based platform with real-time visibility into asset status and utilization.
 
-- **Frontend**: Next.js 15, React, TypeScript, TailwindCSS, shadcn/ui
-- **Backend**: Hono, TypeScript, Prisma
-- **Database**: PostgreSQL (local via Docker or Neon)
-- **Package Manager**: npm
-- **Build System**: Turborepo
-- **ORM**: Prisma
+---
 
-## 📂 Project Structure
+# 🎯 Problem Statement
+
+Organizations often struggle with:
+
+- Manual asset tracking
+- Double allocation of assets
+- Poor maintenance scheduling
+- Resource booking conflicts
+- Lack of audit records
+- No centralized monitoring
+
+AssetFlow solves these problems by providing a complete ERP-based Asset Management platform.
+
+---
+
+# ✨ Features
+
+## 🔐 Authentication
+
+- Secure Login
+- Employee Signup
+- Forgot Password
+- Session Management
+- Role-Based Authentication
+
+---
+
+## 🏢 Organization Management
+
+- Department Management
+- Asset Category Management
+- Employee Directory
+- Role Assignment
+- Department Hierarchy
+
+---
+
+## 💻 Asset Management
+
+- Register Assets
+- Asset Tag Generation
+- QR Code Support
+- Asset Images/Documents
+- Asset Lifecycle Tracking
+- Asset History
+
+Asset Status:
+
+- Available
+- Allocated
+- Reserved
+- Under Maintenance
+- Lost
+- Retired
+- Disposed
+
+---
+
+## 🔄 Asset Allocation
+
+- Allocate Assets
+- Return Assets
+- Transfer Requests
+- Conflict Detection
+- Expected Return Date
+- Overdue Tracking
+
+---
+
+## 📅 Resource Booking
+
+- Meeting Room Booking
+- Vehicle Booking
+- Equipment Booking
+- Calendar View
+- Overlap Validation
+- Booking Reminders
+
+---
+
+## 🔧 Maintenance Management
+
+- Raise Maintenance Requests
+- Approval Workflow
+- Technician Assignment
+- Maintenance History
+- Asset Status Update
+
+Workflow:
+
+Pending
+→ Approved / Rejected
+→ Technician Assigned
+→ In Progress
+→ Resolved
+
+---
+
+## 📋 Asset Audit
+
+- Create Audit Cycle
+- Assign Auditors
+- Verify Assets
+- Missing Asset Detection
+- Damage Reporting
+- Discrepancy Reports
+
+---
+
+## 📊 Reports & Analytics
+
+- Asset Utilization
+- Maintenance Reports
+- Department-wise Reports
+- Booking Heatmaps
+- Export Reports
+
+---
+
+## 🔔 Notifications
+
+- Asset Assigned
+- Transfer Approved
+- Maintenance Updates
+- Booking Confirmation
+- Return Reminder
+- Audit Notifications
+
+---
+
+# 👥 User Roles
+
+## 👑 Admin
+
+- Manage Departments
+- Manage Categories
+- Manage Employees
+- Assign Roles
+- View Reports
+- Create Audit Cycles
+
+---
+
+## 📦 Asset Manager
+
+- Register Assets
+- Allocate Assets
+- Approve Transfers
+- Approve Maintenance
+- Verify Asset Returns
+
+---
+
+## 🏢 Department Head
+
+- View Department Assets
+- Approve Requests
+- Book Shared Resources
+
+---
+
+## 👤 Employee
+
+- View Assigned Assets
+- Book Resources
+- Raise Maintenance Requests
+- Request Transfers
+- Return Assets
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- React.js
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+
+## Backend
+
+- Flask
+- Flask JWT Authentication
+- SQLAlchemy
+
+## Database
+
+- PostgreSQL
+
+## Storage
+
+- Cloudinary / Local Storage
+
+## Authentication
+
+- JWT Authentication
+
+---
+
+# 📂 Project Structure
 
 ```
-assetflow/
-├── apps/
-│   ├── web/          # Next.js frontend application
-│   └── api/          # Hono backend application
-├── packages/
-│   ├── shared-types/     # Shared TypeScript types
-│   ├── shared-utils/     # Shared utility functions
-│   ├── shared-configs/   # Shared configurations
-│   ├── api-client/       # Shared API client
-│   └── ui-components/    # Shared UI components
-├── configs/         # Monorepo configurations
-├── docs/            # Documentation
-├── prisma/          # Prisma schema and migrations
-├── database/        # Database setup scripts
-└── docker-compose.yml # Docker setup
+AssetFlow/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── backend/
+│   ├── app/
+│   ├── routes/
+│   ├── models/
+│   ├── services/
+│   ├── config/
+│   └── requirements.txt
+│
+├── database/
+│
+├── docs/
+│
+├── README.md
+│
+└── .gitignore
 ```
 
-## ✨ Features
+---
 
-- **Asset Management**: Track and manage enterprise assets
-- **Resource Booking**: Book and allocate resources
-- **Maintenance Scheduling**: Schedule and track asset maintenance
-- **Audit System**: Conduct asset audits
-- **Organization Management**: Manage departments and users
-- **Reporting**: Generate reports and analytics
-- **Activity Logs**: Track all system activities
-- **RBAC**: Role-based access control
+# 📄 Major Modules
 
-## 🛠️ Getting Started
+- Authentication
+- Dashboard
+- Organization Setup
+- Asset Directory
+- Asset Allocation
+- Resource Booking
+- Maintenance Management
+- Asset Audit
+- Reports & Analytics
+- Notifications
 
-### Prerequisites
+---
 
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- Docker (for local PostgreSQL)
+# 🔄 Asset Lifecycle
 
-### Installation
+```
+Available
+     │
+     ▼
+Allocated
+     │
+     ▼
+Returned
+     │
+     ▼
+Available
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+OR
 
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` with your configuration
+Available
+     │
+     ▼
+Under Maintenance
+     │
+     ▼
+Available
 
-4. Start PostgreSQL database:
-   ```bash
-   docker-compose up -d
-   ```
+OR
 
-5. Set up the database:
-   ```bash
-   npm run prisma:migrate
-   ```
+Available
+     │
+     ▼
+Lost
 
-6. Seed the database (optional):
-   ```bash
-   npm run prisma:seed
-   ```
+OR
 
-### Development
+Available
+     │
+     ▼
+Retired
+```
 
-Start all applications in development mode:
+---
+
+# 🚦 Workflow
+
+```
+Admin
+   │
+   ▼
+Create Departments
+
+   │
+   ▼
+Register Employees
+
+   │
+   ▼
+Assign Roles
+
+   │
+   ▼
+Asset Manager Registers Assets
+
+   │
+   ▼
+Allocate Assets
+
+   │
+   ▼
+Employees Use Assets
+
+   │
+   ▼
+Maintenance / Booking
+
+   │
+   ▼
+Audit
+
+   │
+   ▼
+Reports
+```
+
+---
+
+# 🚀 Installation
+
+## Clone Repository
+
 ```bash
+git clone https://github.com/yourusername/AssetFlow.git
+```
+
+---
+
+## Frontend
+
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
-Start individual applications:
-```bash
-# Frontend
-npm run dev:web
+---
 
-# Backend
-npm run dev:api
+## Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
 ```
 
-### Build
+---
 
-Build all applications:
-```bash
-npm run build
+## Database
+
+Create PostgreSQL database:
+
+```sql
+CREATE DATABASE assetflow;
 ```
 
-Build individual applications:
-```bash
-npm run build:web
-npm run build:api
-```
+Update database configuration in the backend and run migrations.
 
-## 📜 Available Scripts
+---
 
-| Script               | Description                                  |
-|----------------------|----------------------------------------------|
-| `npm run dev`        | Start all applications in development mode   |
-| `npm run dev:web`    | Start only the frontend                      |
-| `npm run dev:api`    | Start only the backend                       |
-| `npm run build`      | Build all applications                       |
-| `npm run test`       | Run all tests                                |
-| `npm run lint`       | Lint all packages                            |
-| `npm run format`     | Format all code                              |
-| `npm run type-check` | Run TypeScript type checking                 |
-| `npm run clean`      | Clean all build outputs                      |
-| `npm run prisma:migrate` | Run database migrations                  |
-| `npm run prisma:studio` | Open Prisma Studio                       |
-| `npm run prisma:seed` | Seed the database                           |
+# 📈 Future Improvements
 
-## 📚 Documentation
+- QR Code Scanner
+- Barcode Support
+- Email Notifications
+- SMS Notifications
+- Mobile Application
+- AI-based Asset Prediction
+- Predictive Maintenance
+- RFID Integration
+- Multi-Organization Support
 
-- [Architecture](./docs/architecture/ARCHITECTURE.md)
-- [Database Schema](./docs/architecture/DATABASE_SCHEMA.md)
-- [Database Setup](./database/README.md)
+---
 
-## 📄 License
+# 🤝 Contributors
 
-MIT
+- **MIKEY**
+- Team Members
+
+---
+
+# 📜 License
+
+This project is developed for educational and hackathon purposes.
+
+---
+
+# ⭐ Acknowledgements
+
+Inspired by modern Enterprise Resource Planning (ERP) systems for efficient Asset & Resource Management.
