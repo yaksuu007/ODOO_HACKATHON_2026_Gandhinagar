@@ -575,8 +575,8 @@ model Role {
 
   // Relations
   organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("RoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("RoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
   rolePermissions          RolePermission[]
   userRoles                UserRole[]
 
@@ -860,6 +860,8 @@ model Location {
   auditItems               AuditItem[] @relation("AuditItemAssignedLocation")
   auditItemsExpected        AuditItem[] @relation("AuditItemExpectedLocation")
   auditItemsActual         AuditItem[] @relation("AuditItemActualLocation")
+  hierarchyAncestors        LocationHierarchy[] @relation("HierarchyAncestor")
+  hierarchyDescendants      LocationHierarchy[] @relation("HierarchyDescendant")
 
   // Indexes
   @@unique([organizationId, code])
@@ -876,10 +878,8 @@ model LocationHierarchy {
   depth                    Int       @default(0)
 
   // Relations
-  ancestor                 Location   @relation("LocationHierarchyAncestor", fields: [ancestorId], references: [id], onDelete: Cascade)
-  descendants              Location[] @relation("LocationHierarchyAncestor")
-  descendant               Location   @relation("LocationHierarchyDescendant", fields: [descendantId], references: [id], onDelete: Cascade)
-  ancestors                Location[] @relation("LocationHierarchyDescendant")
+  ancestorLocation         Location   @relation("HierarchyAncestor", fields: [ancestorId], references: [id], onDelete: Cascade)
+  descendantLocation       Location   @relation("HierarchyDescendant", fields: [descendantId], references: [id], onDelete: Cascade)
 
   // Indexes
   @@unique([ancestorId, descendantId])
@@ -1068,8 +1068,8 @@ model AssetSpecification {
 
   // Relations
   asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("AssetSpecificationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("AssetSpecificationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@map("asset_specifications")
 }
@@ -1090,7 +1090,7 @@ model AssetWarranty {
 
   // Relations
   asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("AssetWarrantyCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([assetId])
@@ -1157,13 +1157,13 @@ model Allocation {
   asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
   allocatedToEmployee      Employee?   @relation("AllocationEmployee", fields: [allocatedToEmployeeId], references: [id], onDelete: SetNull)
   allocatedToDepartment    Department? @relation("AllocationDepartment", fields: [allocatedToDepartmentId], references: [id], onDelete: SetNull)
-  allocatedByUser          User        @relation("AllocationCreatedBy", fields: [allocatedBy], references: [id])
+  allocatedByUser          User        @relation("AllocationAllocatedBy", fields: [allocatedBy], references: [id])
   transferFrom             Allocation? @relation("AllocationTransferChain", fields: [transferFromAllocationId], references: [id], onDelete: SetNull)
   transferTo               Allocation[] @relation("AllocationTransferChain")
   approvedByUser           User?       @relation("AllocationApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
   rejectedByUser           User?       @relation("AllocationRejectedBy", fields: [rejectedBy], references: [id], onDelete: SetNull)
   updatedByUser            User?       @relation("AllocationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("AllocationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   history                  AllocationHistory[]
   transferApprovals        TransferApproval[]
   conflicts                AllocationConflict[] @relation("AllocationConflictExisting")
@@ -1240,8 +1240,8 @@ model Transfer {
   approvedByUser           User?       @relation("TransferApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
   rejectedByUser           User?       @relation("TransferRejectedBy", fields: [rejectedBy], references: [id], onDelete: SetNull)
   completedByUser          User?       @relation("TransferCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("TransferUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("TransferCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   approvals                TransferApproval[]
 
   // Indexes
@@ -1383,8 +1383,8 @@ model Booking {
   approvedByUser           User?       @relation("BookingApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
   rejectedByUser           User?       @relation("BookingRejectedBy", fields: [rejectedBy], references: [id], onDelete: SetNull)
   cancelledByUser          User?       @relation("BookingCancelledBy", fields: [cancelledBy], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("BookingUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("BookingCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   history                  BookingHistory[]
   attendees                BookingAttendee[]
   blackouts                BookingBlackout[]
@@ -1476,7 +1476,7 @@ model BookingBlackout {
 
   // Relations
   resource                 BookableResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("BookingBlackoutCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([resourceId])
@@ -1527,8 +1527,8 @@ model MaintenanceRequest {
   approvedByUser           User?       @relation("MaintenanceApprovedBy", fields: [approvedBy], references: [id], onDelete: SetNull)
   rejectedByUser           User?       @relation("MaintenanceRejectedBy", fields: [rejectedBy], references: [id], onDelete: SetNull)
   completedByUser          User?       @relation("MaintenanceCompletedBy", fields: [completedBy], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("MaintenanceRequestUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("MaintenanceRequestCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   activities               MaintenanceActivity[]
   technicians              MaintenanceTechnician[]
   approvals                MaintenanceApproval[]
@@ -1644,8 +1644,8 @@ model MaintenanceSchedule {
   organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
   assignedToUser           User?       @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("MaintenanceScheduleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("MaintenanceScheduleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([assetId])
@@ -1693,7 +1693,7 @@ model MaintenanceCost {
   // Relations
   maintenanceRequest       MaintenanceRequest @relation(fields: [maintenanceRequestId], references: [id], onDelete: Cascade)
   vendor                   Vendor?     @relation(fields: [vendorId], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("MaintenanceCostCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([maintenanceRequestId])
@@ -1955,8 +1955,8 @@ model ReportSchedule {
 
   // Relations
   report                   Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  updatedByUser            User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
-  createdByUser            User?       @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser            User?       @relation("ReportScheduleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdByUser            User?       @relation("ReportScheduleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([reportId])
