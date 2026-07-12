@@ -64,6 +64,12 @@ enum ActionType {
   unassign
   archive
   restore
+  login_success
+  login_failed
+  logout_success
+  logout_all_success
+  register_success
+  register_failed
 }
 
 // Organization Setup Enums
@@ -431,9 +437,11 @@ model Organization {
   vendors                  Vendor[]
   maintenanceSchedules     MaintenanceSchedule[]
   auditCycles              AuditCycle[]
+  auditChecklists          AuditChecklist[]
   reports                  Report[]
   notificationTemplates     NotificationTemplate[]
   notificationRules        NotificationRule[]
+  notifications            Notification[]
   activityLogs             ActivityLog[]
   dashboardWidgets         DashboardWidget[]
   kpiMetrics               KpiMetric[]
@@ -483,18 +491,26 @@ model User {
   department               Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   createdByUser            User?       @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   updatedByUser            User?       @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdUsers             User[] @relation("UserCreatedBy")
+  updatedUsers             User[] @relation("UserUpdatedBy")
   sessions                 Session[]
   passwordResetTokens      PasswordResetToken[]
   userRoles                UserRole[]
   rolePermissions          RolePermission[] @relation("RolePermissionCreatedBy")
   userRolesAssigned        UserRole[] @relation("UserRoleAssignedBy")
+  roles                    Role[] @relation("RoleCreatedBy")
+  rolesUpdatedBy           Role[] @relation("RoleUpdatedBy")
   assetStatusHistory       AssetStatusHistory[]
   assetPhotos              AssetPhoto[]
   assetDocuments           AssetDocument[]
   assetQrCodes             AssetQrCode[]
-  assetSpecifications      AssetSpecification[]
-  assetWarranties          AssetWarranty[]
+  assetSpecifications      AssetSpecification[] @relation("AssetSpecificationCreatedBy")
+  assetSpecificationsUpdatedBy AssetSpecification[] @relation("AssetSpecificationUpdatedBy")
+  assetWarranties          AssetWarranty[] @relation("AssetWarrantyCreatedBy")
+  assets                   Asset[] @relation("AssetCreatedBy")
+  assetsUpdatedBy          Asset[] @relation("AssetUpdatedBy")
   allocations              Allocation[] @relation("AllocationCreatedBy")
+  allocationsAllocatedBy   Allocation[] @relation("AllocationAllocatedBy")
   allocationsUpdatedBy     Allocation[] @relation("AllocationUpdatedBy")
   allocationsApprovedBy    Allocation[] @relation("AllocationApprovedBy")
   allocationsRejectedBy    Allocation[] @relation("AllocationRejectedBy")
@@ -502,18 +518,26 @@ model User {
   transfersApprovedBy      Transfer[] @relation("TransferApprovedBy")
   transfersRejectedBy      Transfer[] @relation("TransferRejectedBy")
   transfersCompletedBy     Transfer[] @relation("TransferCompletedBy")
+  transfersUpdatedBy      Transfer[] @relation("TransferUpdatedBy")
+  transfersCreatedBy      Transfer[] @relation("TransferCreatedBy")
   transferApprovals        TransferApproval[]
-  allocationConflicts      AllocationConflict[]
+  allocationConflictsResolvedBy AllocationConflict[] @relation("AllocationConflictResolvedBy")
+  allocationHistory         AllocationHistory[]
   maintenanceRequests      MaintenanceRequest[] @relation("MaintenanceRequestedBy")
-  maintenanceRequestsAssignedTo MaintenanceRequest[] @relation("MaintenanceAssignedTo")
   maintenanceRequestsApprovedBy MaintenanceRequest[] @relation("MaintenanceApprovedBy")
   maintenanceRequestsRejectedBy MaintenanceRequest[] @relation("MaintenanceRejectedBy")
   maintenanceRequestsCompletedBy MaintenanceRequest[] @relation("MaintenanceCompletedBy")
+  maintenanceRequestsUpdatedBy MaintenanceRequest[] @relation("MaintenanceRequestUpdatedBy")
+  maintenanceRequestsCreatedBy MaintenanceRequest[] @relation("MaintenanceRequestCreatedBy")
+  maintenanceRequestsAssignedTo MaintenanceRequest[] @relation("MaintenanceAssignedTo")
   maintenanceActivities    MaintenanceActivity[]
   maintenanceTechnicians   MaintenanceTechnician[] @relation("MaintenanceTechnicianAssignedBy")
-  maintenanceSchedules     MaintenanceSchedule[]
+  maintenanceTechniciansAssigned MaintenanceTechnician[]
+  maintenanceSchedules     MaintenanceSchedule[] @relation("MaintenanceScheduleCreatedBy")
+  maintenanceSchedulesUpdatedBy MaintenanceSchedule[] @relation("MaintenanceScheduleUpdatedBy")
+  maintenanceSchedulesAssignedTo MaintenanceSchedule[]
   maintenanceApprovals     MaintenanceApproval[]
-  maintenanceCosts         MaintenanceCost[]
+  maintenanceCosts         MaintenanceCost[] @relation("MaintenanceCostCreatedBy")
   vendors                  Vendor[] @relation("VendorCreatedBy")
   vendorsUpdatedBy         Vendor[] @relation("VendorUpdatedBy")
   auditCycles              AuditCycle[] @relation("AuditCycleCreatedBy")
@@ -529,20 +553,30 @@ model User {
   auditChecklistsUpdatedBy AuditChecklist[] @relation("AuditChecklistUpdatedBy")
   reports                  Report[] @relation("ReportCreatedBy")
   reportsUpdatedBy         Report[] @relation("ReportUpdatedBy")
+  reportSchedules          ReportSchedule[] @relation("ReportScheduleCreatedBy")
+  reportSchedulesUpdatedBy ReportSchedule[] @relation("ReportScheduleUpdatedBy")
+  reportSubscriptions      ReportSubscription[]
   notifications            Notification[]
+  notificationPreferences   NotificationPreference[]
   notificationTemplates    NotificationTemplate[] @relation("NotificationTemplateCreatedBy")
   notificationTemplatesUpdatedBy NotificationTemplate[] @relation("NotificationTemplateUpdatedBy")
   notificationRules        NotificationRule[] @relation("NotificationRuleCreatedBy")
   notificationRulesUpdatedBy NotificationRule[] @relation("NotificationRuleUpdatedBy")
   activityLogs             ActivityLog[]
+  dashboardConfigs         DashboardConfig[]
   dashboardWidgets         DashboardWidget[] @relation("DashboardWidgetCreatedBy")
   dashboardWidgetsUpdatedBy DashboardWidget[] @relation("DashboardWidgetUpdatedBy")
+  bookableResources        BookableResource[] @relation("BookableResourceCreatedBy")
+  bookableResourcesUpdatedBy BookableResource[] @relation("BookableResourceUpdatedBy")
   bookings                 Booking[] @relation("BookingBookedBy")
   bookingsApprovedBy       Booking[] @relation("BookingApprovedBy")
   bookingsRejectedBy       Booking[] @relation("BookingRejectedBy")
   bookingsCancelledBy      Booking[] @relation("BookingCancelledBy")
+  bookingsUpdatedBy        Booking[] @relation("BookingUpdatedBy")
+  bookingsCreatedBy        Booking[] @relation("BookingCreatedBy")
   bookingHistory           BookingHistory[]
-  bookingBlackouts         BookingBlackout[]
+  bookingBlackouts         BookingBlackout[] @relation("BookingBlackoutCreatedBy")
+  bookingAttendees         BookingAttendee[]
   settings                 Setting[] @relation("SettingUpdatedBy")
   featureFlags             FeatureFlag[] @relation("FeatureFlagUpdatedBy")
   systemLogs               SystemLog[]
@@ -716,8 +750,7 @@ model Department {
   organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   parent                   Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children                 Department[] @relation("DepartmentHierarchy")
-  manager                  Employee?   @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
-  managedDepartments       Department[] @relation("DepartmentManagedBy")
+  manager                  Employee?   @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
   location                 Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
   employees                Employee[]
   assets                   Asset[] @relation("AssetAssignedDepartment")
@@ -725,6 +758,7 @@ model Department {
   transfersFrom            Transfer[] @relation("TransferFromDepartment")
   transfersTo              Transfer[] @relation("TransferToDepartment")
   auditAssignments         AuditAssignment[]
+  users                    User[]
 
   // Indexes
   @@unique([organizationId, code])
@@ -767,15 +801,13 @@ model Employee {
   directReports            Employee[] @relation("EmployeeManager")
   location                 Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
   users                    User[]
-  managedDepartments       Department[] @relation("DepartmentManagedBy")
+  managedDepartments       Department[] @relation("EmployeeManager")
   assets                   Asset[] @relation("AssetAssignedTo")
   allocations              Allocation[] @relation("AllocationEmployee")
   transfersFrom            Transfer[] @relation("TransferFromEmployee")
   transfersTo              Transfer[] @relation("TransferToEmployee")
   locations                Location[] @relation("LocationManager")
   bookingAttendees         BookingAttendee[]
-  maintenanceTechnicians   MaintenanceTechnician[]
-  auditAssignments         AuditAssignment[]
 
   // Indexes
   @@unique([organizationId, employeeNumber])
@@ -851,7 +883,6 @@ model Location {
   parent                   Location?   @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children                 Location[] @relation("LocationHierarchy")
   manager                  Employee?   @relation("LocationManager", fields: [managerId], references: [id], onDelete: SetNull)
-  managedLocations         Location[] @relation("LocationManager")
   departments              Department[]
   employees                Employee[]
   assets                   Asset[]
@@ -946,8 +977,9 @@ model Asset {
   qrCodes                  AssetQrCode[]
   specifications           AssetSpecification[]
   warranties               AssetWarranty[]
-  depreciation             AssetDepreciation
+  depreciation             AssetDepreciation? @relation("AssetDepreciationAsset")
   allocations              Allocation[]
+  allocationConflicts     AllocationConflict[] @relation("AllocationConflictAsset")
   transfers                Transfer[]
   maintenanceRequests      MaintenanceRequest[]
   maintenanceSchedules     MaintenanceSchedule[]
@@ -1113,7 +1145,7 @@ model AssetDepreciation {
   updatedAt                DateTime  @default(now()) @db.Timestamp(6)
 
   // Relations
-  asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset                    Asset?      @relation("AssetDepreciationAsset", fields: [assetId], references: [id])
 
   // Indexes
   @@index([lastCalculatedAt])
@@ -1165,7 +1197,6 @@ model Allocation {
   updatedByUser            User?       @relation("AllocationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
   createdByUser            User?       @relation("AllocationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   history                  AllocationHistory[]
-  transferApprovals        TransferApproval[]
   conflicts                AllocationConflict[] @relation("AllocationConflictExisting")
   conflictingConflicts     AllocationConflict[] @relation("AllocationConflictConflicting")
   assetStatusHistory       AssetStatusHistory[]
@@ -1291,10 +1322,10 @@ model AllocationConflict {
   status                   ApprovalStatus @default(pending)
 
   // Relations
-  asset                    Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset                    Asset       @relation("AllocationConflictAsset", fields: [assetId], references: [id], onDelete: Cascade)
   existingAllocation       Allocation @relation("AllocationConflictExisting", fields: [existingAllocationId], references: [id], onDelete: Cascade)
   conflictingAllocation    Allocation? @relation("AllocationConflictConflicting", fields: [conflictingAllocationId], references: [id], onDelete: SetNull)
-  resolvedByUser           User?       @relation(fields: [resolvedBy], references: [id], onDelete: SetNull)
+  resolvedByUser           User?       @relation("AllocationConflictResolvedBy", fields: [resolvedBy], references: [id], onDelete: SetNull)
 
   // Indexes
   @@index([assetId])
@@ -1387,7 +1418,6 @@ model Booking {
   createdByUser            User?       @relation("BookingCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   history                  BookingHistory[]
   attendees                BookingAttendee[]
-  blackouts                BookingBlackout[]
 
   // Indexes
   @@index([resourceId])
@@ -1870,7 +1900,7 @@ model AuditChecklist {
 
   // Relations
   organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  category                 AssetCategory @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category                 AssetCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdByUser            User?       @relation("AuditChecklistCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   updatedByUser            User?       @relation("AuditChecklistUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
   items                    AuditChecklistItem[]
@@ -1943,7 +1973,7 @@ model ReportSchedule {
   intervalValue            Int?
   dayOfWeek                Int?
   dayOfMonth               Int?
-  time                     DateTime  @default("00:00") @db.Time
+  time                     String?    @default("00:00") @db.VarChar(5)
   nextRunAt                DateTime  @db.Timestamp(6)
   lastRunAt                DateTime? @db.Timestamp(6)
   isActive                 Boolean   @default(true)

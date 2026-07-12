@@ -26,12 +26,14 @@ async function main() {
   // Password hash is for 'Admin123!' - change in production
   const user = await prisma.user.upsert({
     where: { email: 'admin@default.com' },
-    update: {},
+    update: {
+      passwordHash: '$2a$12$MZlu7r46RQY8g8al3vkyC.1Vygwz1gyWiaRYlJDqqhnY3Ywf8Mobu',
+    },
     create: {
       id: '00000000-0000-0000-0000-000000000002',
       organizationId: organization.id,
       email: 'admin@default.com',
-      passwordHash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYlW5QhWq5i',
+      passwordHash: '$2a$12$MZlu7r46RQY8g8al3vkyC.1Vygwz1gyWiaRYlJDqqhnY3Ywf8Mobu',
       firstName: 'System',
       lastName: 'Administrator',
       isActive: true,
@@ -373,10 +375,10 @@ async function main() {
 
   for (const setting of settings) {
     await prisma.setting.upsert({
-      where: { organizationId_key: { organizationId: null, key: setting.key } },
+      where: { organizationId_key: { organizationId: organization.id, key: setting.key } },
       update: {},
       create: {
-        organizationId: null,
+        organizationId: organization.id,
         ...setting,
         valueType: setting.valueType as any,
       },
@@ -395,10 +397,10 @@ async function main() {
 
   for (const flag of featureFlags) {
     await prisma.featureFlag.upsert({
-      where: { organizationId_featureName: { organizationId: null, featureName: flag.featureName } },
+      where: { organizationId_featureName: { organizationId: organization.id, featureName: flag.featureName } },
       update: {},
       create: {
-        organizationId: null,
+        organizationId: organization.id,
         ...flag,
       },
     })

@@ -13,320 +13,56 @@ assetflow/
 │   │   │   │   ├── (auth)/            # Auth route group
 │   │   │   │   │   ├── login/
 │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── register/
-│   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   ├── forgot-password/
+│   │   │   │   │   ├── signup/
 │   │   │   │   │   │   └── page.tsx
 │   │   │   │   │   └── layout.tsx
 │   │   │   │   ├── (dashboard)/      # Dashboard route group
-│   │   │   │   │   ├── dashboard/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── stats-cards.tsx
-│   │   │   │   │   │       ├── activity-feed.tsx
-│   │   │   │   │   │       └── recent-alerts.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (assets)/         # Asset Management route group
-│   │   │   │   │   ├── assets/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── asset-details.tsx
-│   │   │   │   │   │   │       ├── asset-history.tsx
-│   │   │   │   │   │   │       └── asset-documents.tsx
-│   │   │   │   │   │   ├── new/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── asset-table.tsx
-│   │   │   │   │   │       ├── asset-filters.tsx
-│   │   │   │   │   │       ├── asset-form.tsx
-│   │   │   │   │   │       └── qr-code-generator.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (allocation)/     # Asset Allocation route group
+│   │   │   │   │   ├── page.tsx          # Dashboard home
+│   │   │   │   │   ├── layout.tsx        # Dashboard layout
+│   │   │   │   │   ├── activity/
+│   │   │   │   │   │   └── page.tsx
 │   │   │   │   │   ├── allocations/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   ├── new/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── allocation-table.tsx
-│   │   │   │   │   │       ├── allocation-form.tsx
-│   │   │   │   │   │       └── return-asset-dialog.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (booking)/        # Resource Booking route group
-│   │   │   │   │   ├── bookings/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   ├── new/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── booking-calendar.tsx
-│   │   │   │   │   │       ├── booking-form.tsx
-│   │   │   │   │   │       └── availability-checker.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (maintenance)/    # Maintenance route group
-│   │   │   │   │   ├── maintenance/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   ├── schedules/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── schedule-calendar.tsx
-│   │   │   │   │   │   │       └── schedule-form.tsx
-│   │   │   │   │   │   ├── requests/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── request-table.tsx
-│   │   │   │   │   │   │       └── request-form.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── maintenance-workflow.tsx
-│   │   │   │   │   │       └── vendor-management.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (audit)/          # Audit route group
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── assets/
+│   │   │   │   │   │   └── page.tsx
 │   │   │   │   │   ├── audits/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   ├── new/
-│   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── audit-table.tsx
-│   │   │   │   │   │       ├── audit-form.tsx
-│   │   │   │   │   │       ├── audit-checklist.tsx
-│   │   │   │   │   │       └── discrepancy-report.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (reports)/        # Reports route group
-│   │   │   │   │   ├── reports/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── assets/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── asset-analytics.tsx
-│   │   │   │   │   │   │       └── depreciation-chart.tsx
-│   │   │   │   │   │   ├── allocations/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       └── utilization-report.tsx
-│   │   │   │   │   │   ├── maintenance/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       └── maintenance-cost-report.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── report-generator.tsx
-│   │   │   │   │   │       └── export-options.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (organization)/   # Organization Setup route group
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── maintenance/
+│   │   │   │   │   │   └── page.tsx
 │   │   │   │   │   ├── organization/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   ├── departments/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── department-form.tsx
-│   │   │   │   │   │   │       └── department-tree.tsx
-│   │   │   │   │   │   ├── locations/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── location-form.tsx
-│   │   │   │   │   │   │       └── location-hierarchy.tsx
-│   │   │   │   │   │   ├── users/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   ├── [id]/
-│   │   │   │   │   │   │   │   └── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── user-table.tsx
-│   │   │   │   │   │   │       ├── user-form.tsx
-│   │   │   │   │   │   │       └── role-assignment.tsx
-│   │   │   │   │   │   ├── roles/
-│   │   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   │   └── components/
-│   │   │   │   │   │   │       ├── role-table.tsx
-│   │   │   │   │   │   │       └── permission-matrix.tsx
-│   │   │   │   │   │   └── settings/
-│   │   │   │   │   │       ├── page.tsx
-│   │   │   │   │   │       └── components/
-│   │   │   │   │   │           ├── org-settings-form.tsx
-│   │   │   │   │   │           └── branding-config.tsx
-│   │   │   │   │   └── layout.tsx
-│   │   │   │   ├── (notifications)/  # Notifications route group
-│   │   │   │   │   ├── notifications/
-│   │   │   │   │   │   ├── page.tsx
-│   │   │   │   │   │   └── components/
-│   │   │   │   │   │       ├── notification-center.tsx
-│   │   │   │   │   │       ├── notification-preferences.tsx
-│   │   │   │   │   │       └── notification-rules.tsx
-│   │   │   │   │   └── layout.tsx
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── reports/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── resources/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── settings/
+│   │   │   │   │       └── page.tsx
 │   │   │   │   ├── api/              # API Routes (if any Next.js API routes needed)
-│   │   │   │   │   └── webhooks/
-│   │   │   │   │       └── route.ts
 │   │   │   │   ├── layout.tsx        # Root layout
 │   │   │   │   ├── page.tsx          # Root page (redirect to dashboard)
 │   │   │   │   ├── loading.tsx       # Global loading state
 │   │   │   │   ├── error.tsx         # Global error boundary
 │   │   │   │   └── not-found.tsx     # Global 404 page
-│   │   │   ├── components/           # Shared UI Components
-│   │   │   │   ├── ui/               # Shadcn UI components
-│   │   │   │   │   ├── button.tsx
-│   │   │   │   │   ├── input.tsx
-│   │   │   │   │   ├── table.tsx
-│   │   │   │   │   ├── dialog.tsx
-│   │   │   │   │   ├── dropdown-menu.tsx
-│   │   │   │   │   ├── select.tsx
-│   │   │   │   │   ├── form.tsx
-│   │   │   │   │   ├── card.tsx
-│   │   │   │   │   ├── badge.tsx
-│   │   │   │   │   ├── avatar.tsx
-│   │   │   │   │   ├── tabs.tsx
-│   │   │   │   │   ├── toast.tsx
-│   │   │   │   │   └── ...
-│   │   │   │   ├── layout/           # Layout components
-│   │   │   │   │   ├── header.tsx
-│   │   │   │   │   ├── sidebar.tsx
-│   │   │   │   │   ├── footer.tsx
-│   │   │   │   │   └── main-content.tsx
-│   │   │   │   ├── common/           # Common feature components
-│   │   │   │   │   ├── data-table.tsx
-│   │   │   │   │   ├── page-header.tsx
-│   │   │   │   │   ├── search-bar.tsx
-│   │   │   │   │   ├── filter-panel.tsx
-│   │   │   │   │   ├── action-menu.tsx
-│   │   │   │   │   ├── confirm-dialog.tsx
-│   │   │   │   │   └── loading-spinner.tsx
-│   │   │   │   └── providers/        # Context providers
-│   │   │   │       ├── theme-provider.tsx
-│   │   │   │       ├── query-provider.tsx
-│   │   │   │       ├── form-provider.tsx
-│   │   │   │       └── toast-provider.tsx
-│   │   │   ├── features/             # Feature-based organization
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-auth.ts
-│   │   │   │   │   │   ├── use-login.ts
-│   │   │   │   │   │   ├── use-logout.ts
-│   │   │   │   │   │   └── use-permissions.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── auth.service.ts
-│   │   │   │   │   └── components/
-│   │   │   │   │       ├── login-form.tsx
-│   │   │   │   │       ├── register-form.tsx
-│   │   │   │   │       └── forgot-password-form.tsx
-│   │   │   │   ├── assets/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-assets.ts
-│   │   │   │   │   │   ├── use-asset.ts
-│   │   │   │   │   │   ├── use-create-asset.ts
-│   │   │   │   │   │   ├── use-update-asset.ts
-│   │   │   │   │   │   └── use-delete-asset.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── asset.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── asset.types.ts
-│   │   │   │   ├── allocations/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-allocations.ts
-│   │   │   │   │   │   ├── use-create-allocation.ts
-│   │   │   │   │   │   └── use-return-asset.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── allocation.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── allocation.types.ts
-│   │   │   │   ├── bookings/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-bookings.ts
-│   │   │   │   │   │   ├── use-create-booking.ts
-│   │   │   │   │   │   └── use-check-availability.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── booking.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── booking.types.ts
-│   │   │   │   ├── maintenance/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-maintenance.ts
-│   │   │   │   │   │   ├── use-schedules.ts
-│   │   │   │   │   │   └── use-requests.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── maintenance.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── maintenance.types.ts
-│   │   │   │   ├── audits/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-audits.ts
-│   │   │   │   │   │   └── use-create-audit.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── audit.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── audit.types.ts
-│   │   │   │   ├── reports/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-reports.ts
-│   │   │   │   │   │   └── use-export-report.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── report.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── report.types.ts
-│   │   │   │   ├── notifications/
-│   │   │   │   │   ├── hooks/
-│   │   │   │   │   │   ├── use-notifications.ts
-│   │   │   │   │   │   └── use-mark-read.ts
-│   │   │   │   │   ├── services/
-│   │   │   │   │   │   └── notification.service.ts
-│   │   │   │   │   └── types/
-│   │   │   │   │       └── notification.types.ts
-│   │   │   │   └── organization/
-│   │   │   │       ├── hooks/
-│   │   │   │       │   ├── use-departments.ts
-│   │   │   │       │   ├── use-locations.ts
-│   │   │   │       │   ├── use-users.ts
-│   │   │   │       │   └── use-roles.ts
-│   │   │   │       ├── services/
-│   │   │   │       │   └── organization.service.ts
-│   │   │   │       └── types/
-│   │   │   │           └── organization.types.ts
-│   │   │   ├── hooks/                # Global custom hooks
-│   │   │   │   ├── use-api-client.ts
-│   │   │   │   ├── use-debounce.ts
-│   │   │   │   ├── use-local-storage.ts
-│   │   │   │   ├── use-media-query.ts
-│   │   │   │   ├── use-pagination.ts
-│   │   │   │   └── use-socket.ts
-│   │   │   ├── services/             # API client and services
-│   │   │   │   ├── api-client.ts
-│   │   │   │   ├── query-client.ts
-│   │   │   │   └── websocket-client.ts
-│   │   │   ├── lib/                  # Utility libraries
-│   │   │   │   ├── utils.ts
-│   │   │   │   ├── cn.ts             # Class name utility
-│   │   │   │   ├── date-fns.ts       # Date utilities
-│   │   │   │   ├── format.ts         # Formatting utilities
-│   │   │   │   └── validation.ts     # Client-side validation
-│   │   │   ├── config/               # Configuration files
-│   │   │   │   ├── site.ts
-│   │   │   │   ├── routes.ts
-│   │   │   │   └── constants.ts
-│   │   │   ├── types/                # Global TypeScript types
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── api.types.ts
-│   │   │   │   ├── common.types.ts
-│   │   │   │   └── pagination.types.ts
-│   │   │   ├── constants/            # Application constants
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── asset-status.ts
-│   │   │   │   ├── allocation-status.ts
-│   │   │   │   ├── maintenance-status.ts
-│   │   │   │   └── audit-status.ts
-│   │   │   └── styles/               # Global styles
-│   │   │       └── globals.css
+│   │   │   ├── components/           # Shared UI Components (empty - for future use)
+│   │   │   ├── config/               # Configuration files (empty - for future use)
+│   │   │   ├── constants/            # Application constants (empty - for future use)
+│   │   │   ├── features/             # Feature-based organization (empty - for future use)
+│   │   │   ├── hooks/                # Global custom hooks (empty - for future use)
+│   │   │   ├── lib/                  # Utility libraries (empty - for future use)
+│   │   │   ├── services/             # API client and services (empty - for future use)
+│   │   │   ├── styles/               # Global styles (empty - for future use)
+│   │   │   ├── types/                # Global TypeScript types (empty - for future use)
+│   │   │   └── utils/                # Utility functions
+│   │   │       └── api.ts
 │   │   ├── public/                   # Static assets
 │   │   │   ├── images/
 │   │   │   ├── icons/
 │   │   │   └── fonts/
 │   │   ├── package.json
 │   │   ├── tsconfig.json
-│   │   ├── next.config.js
-│   │   ├── tailwind.config.ts
+│   │   ├── next.config.ts
+│   │   ├── postcss.config.mjs
+│   │   ├── eslint.config.mjs
 │   │   └── components.json
 │   │
 │   └── api/                          # Hono Backend Application
