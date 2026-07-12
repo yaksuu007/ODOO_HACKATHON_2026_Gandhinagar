@@ -1,0 +1,37 @@
+{
+  "extends": "../../configs/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "incremental": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/routes/*": ["./src/routes/*"],
+      "@/controllers/*": ["./src/controllers/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/repositories/*": ["./src/repositories/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/validators/*": ["./src/validators/*"],
+      "@/dtos/*": ["./src/dtos/*"],
+      "@/database/*": ["./src/database/*"],
+      "@/auth/*": ["./src/auth/*"],
+      "@/rbac/*": ["./src/rbac/*"],
+      "@/notifications/*": ["./src/notifications/*"],
+      "@/logs/*": ["./src/logs/*"],
+      "@/errors/*": ["./src/errors/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/jobs/*": ["./src/jobs/*"],
+      "@/websocket/*": ["./src/websocket/*"],
+      "@/file-upload/*": ["./src/file-upload/*"],
+      "@/ai/*": ["./src/ai/*"],
+      "@/types/*": ["./src/types/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
