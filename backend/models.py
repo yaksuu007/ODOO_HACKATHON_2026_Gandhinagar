@@ -87,3 +87,23 @@ class ActivityLog(SQLModel, table=True):
     entity_id: str
     timestamp: str
     details: Optional[str] = None
+
+class SupportTicket(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    subject: str
+    message: str
+    username: str
+    status: str = "OPEN"  # OPEN, RESOLVED
+    priority: str = "MEDIUM"  # LOW, MEDIUM, HIGH
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    reply: Optional[str] = None
+
+class Notification(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    message: str
+    category: str = "SYSTEM"  # SYSTEM, ASSET, MAINTENANCE, AUDIT
+    is_read: bool = Field(default=False)
+    username: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+

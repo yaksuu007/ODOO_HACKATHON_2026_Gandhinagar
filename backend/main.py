@@ -10,7 +10,8 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import auth
 from models import (
     User, Asset, Allocation, Resource, Booking,
-    MaintenanceTicket, Audit, ActivityLog, Department, Organization
+    MaintenanceTicket, Audit, ActivityLog, Department, Organization,
+    SupportTicket, Notification
 )
 
 sqlite_file_name = "assetflow.db"
@@ -24,10 +25,10 @@ def get_session():
 
 app = FastAPI(title="AssetFlow ERP Backend", version="1.0.0")
 
-# CORS Middlewares
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow Next.js frontend
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,13 +52,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
-    
+
     user = db.exec(select(User).where(User.username == username)).first()
     if user is None:
         raise credentials_exception
     return user
 
-# Pydantic schemas for request validation
+# ─── Pydantic Request Schemas ──────────────────────────────────────────────────
+
 class UserLogin(BaseModel):
     username: str
     password: str
@@ -101,31 +103,63 @@ class MaintenanceCreate(BaseModel):
     scheduled_date: str
     cost: Optional[float] = 0.0
 
+class MaintenanceStatusUpdate(BaseModel):
+    """BUG FIX #1: Validated status update via request body instead of raw query param."""
+    status: str
+
+    def validate_status(self):
+        allowed = {"PENDING", "IN_PROGRESS", "COMPLETED"}
+        if self.status not in allowed:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid status '{self.status}'. Must be one of: {sorted(allowed)}"
+            )
+
 class AuditCreate(BaseModel):
     id: str
     title: str
     auditor_name: str
     scheduled_date: str
 
+class AuditComplete(BaseModel):
+    """BUG FIX #2: Move audit results to request body to handle special characters and long text."""
+    results: str
+
 class DepartmentCreate(BaseModel):
     name: str
     manager: str
     location: str
 
-# ----------------- DB Initialization -----------------
+class SupportTicketCreate(BaseModel):
+    subject: str
+    message: str
+    priority: str = "MEDIUM"
+
+class SupportTicketReply(BaseModel):
+    reply: str
+
+class NotificationCreate(BaseModel):
+    title: str
+    message: str
+    category: str = "SYSTEM"
+    username: str
+
+
+# ─── DB Initialization ─────────────────────────────────────────────────────────
+
 @app.on_event("startup")
 def on_startup():
     SQLModel.metadata.create_all(engine)
 
-# ----------------- API ROUTES -----------------
 
-# Auth Routes
+# ─── Auth Routes ───────────────────────────────────────────────────────────────
+
 @app.post("/api/auth/register")
 def register(user_data: UserRegister, db: Session = Depends(get_session)):
     existing_user = db.exec(select(User).where(User.username == user_data.username)).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    
+
     db_user = User(
         username=user_data.username,
         email=user_data.email,
@@ -135,8 +169,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_session)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
-    # Create startup activity log
+
     log = ActivityLog(
         username=db_user.username,
         action="REGISTER",
@@ -154,7 +187,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_session)):
     user = db.exec(select(User).where(User.username == login_data.username)).first()
     if not user or not auth.verify_password(login_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
+
     access_token = auth.create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer", "role": user.role}
 
@@ -168,23 +201,29 @@ def get_me(current_user: User = Depends(get_current_user)):
         "created_at": current_user.created_at
     }
 
-# Dashboard Routes
+
+# ─── Dashboard Routes ──────────────────────────────────────────────────────────
+
 @app.get("/api/dashboard/stats")
-def get_stats(db: Session = Depends(get_session)):
+def get_stats(
+    # BUG FIX #7: Added auth guard — dashboard stats were publicly accessible.
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
     total_assets = len(db.exec(select(Asset)).all())
     active_assets = len(db.exec(select(Asset).where(Asset.status == "ACTIVE")).all())
     maintenance_assets = len(db.exec(select(Asset).where(Asset.status == "MAINTENANCE")).all())
     retired_assets = len(db.exec(select(Asset).where(Asset.status == "RETIRED")).all())
-    
+
     resources = db.exec(select(Resource)).all()
     available_resources = len([r for r in resources if r.status == "AVAILABLE"])
     capacity_pct = int((available_resources / len(resources)) * 100) if resources else 0
-    
+
     pending_maint = len(db.exec(select(MaintenanceTicket).where(MaintenanceTicket.status != "COMPLETED")).all())
     critical_maint = len(db.exec(select(MaintenanceTicket).where(MaintenanceTicket.status != "COMPLETED").where(MaintenanceTicket.priority == "HIGH")).all())
-    
+
     active_audits = len(db.exec(select(Audit).where(Audit.status == "ACTIVE")).all())
-    
+
     return {
         "totalAssets": total_assets,
         "activeAssets": active_assets,
@@ -197,8 +236,10 @@ def get_stats(db: Session = Depends(get_session)):
     }
 
 @app.get("/api/dashboard/utilization")
-def get_utilization():
-    # Return mock weekly utilization percentages
+def get_utilization(
+    # BUG FIX #7: Added auth guard — utilization was publicly accessible.
+    current_user: User = Depends(get_current_user)
+):
     return [
         {"day": "Mon", "value": 45},
         {"day": "Tue", "value": 60},
@@ -208,9 +249,15 @@ def get_utilization():
         {"day": "Sat", "value": 65}
     ]
 
-# Asset Routes
+
+# ─── Asset Routes ──────────────────────────────────────────────────────────────
+
 @app.get("/api/assets", response_model=List[Asset])
-def get_assets(db: Session = Depends(get_session)):
+def get_assets(
+    # BUG FIX #8: Added auth guard — asset listing was publicly accessible.
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
     return db.exec(select(Asset)).all()
 
 @app.post("/api/assets", response_model=Asset)
@@ -218,10 +265,10 @@ def create_asset(asset_data: AssetCreate, current_user: User = Depends(get_curre
     existing = db.get(Asset, asset_data.id)
     if existing:
         raise HTTPException(status_code=400, detail="Asset ID already exists")
-    
+
     db_asset = Asset(**asset_data.dict())
     db.add(db_asset)
-    
+
     log = ActivityLog(
         username=current_user.username,
         action="CREATE_ASSET",
@@ -240,10 +287,10 @@ def update_asset(asset_id: str, asset_data: AssetCreate, current_user: User = De
     db_asset = db.get(Asset, asset_id)
     if not db_asset:
         raise HTTPException(status_code=404, detail="Asset not found")
-    
+
     for key, val in asset_data.dict().items():
         setattr(db_asset, key, val)
-        
+
     log = ActivityLog(
         username=current_user.username,
         action="UPDATE_ASSET",
@@ -262,7 +309,21 @@ def delete_asset(asset_id: str, current_user: User = Depends(get_current_user), 
     db_asset = db.get(Asset, asset_id)
     if not db_asset:
         raise HTTPException(status_code=404, detail="Asset not found")
-    
+
+    # BUG FIX #3: Check for FK-linked records before deleting to prevent constraint violations.
+    linked_allocs = db.exec(select(Allocation).where(Allocation.asset_id == asset_id)).all()
+    linked_tickets = db.exec(select(MaintenanceTicket).where(MaintenanceTicket.asset_id == asset_id)).all()
+    if linked_allocs:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot delete asset '{asset_id}' — it has {len(linked_allocs)} allocation record(s). Remove them first."
+        )
+    if linked_tickets:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot delete asset '{asset_id}' — it has {len(linked_tickets)} maintenance ticket(s). Resolve them first."
+        )
+
     db.delete(db_asset)
     log = ActivityLog(
         username=current_user.username,
@@ -276,9 +337,15 @@ def delete_asset(asset_id: str, current_user: User = Depends(get_current_user), 
     db.commit()
     return {"status": "success"}
 
-# Allocations Routes
+
+# ─── Allocation Routes ─────────────────────────────────────────────────────────
+
 @app.get("/api/allocations", response_model=List[Allocation])
-def get_allocations(db: Session = Depends(get_session)):
+def get_allocations(
+    # BUG FIX #8: Added auth guard — allocations were publicly accessible.
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
     return db.exec(select(Allocation)).all()
 
 @app.post("/api/allocations", response_model=Allocation)
@@ -286,8 +353,14 @@ def allocate_asset(alloc_data: AllocationCreate, current_user: User = Depends(ge
     db_asset = db.get(Asset, alloc_data.asset_id)
     if not db_asset:
         raise HTTPException(status_code=404, detail="Asset not found")
-    
-    # Create allocation record
+
+    # BUG FIX #4: Prevent double-allocation — check if asset is already assigned.
+    if db_asset.assigned_to:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Asset '{alloc_data.asset_id}' is already allocated to '{db_asset.assigned_to}'. Return it before re-allocating."
+        )
+
     db_alloc = Allocation(
         asset_id=alloc_data.asset_id,
         employee_name=alloc_data.employee_name,
@@ -296,13 +369,11 @@ def allocate_asset(alloc_data: AllocationCreate, current_user: User = Depends(ge
         notes=alloc_data.notes
     )
     db.add(db_alloc)
-    
-    # Update Asset details
+
     db_asset.assigned_to = alloc_data.employee_name
     db_asset.status = "ACTIVE"
     db.add(db_asset)
-    
-    # Log Activity
+
     log = ActivityLog(
         username=current_user.username,
         action="ALLOCATE_ASSET",
@@ -316,13 +387,15 @@ def allocate_asset(alloc_data: AllocationCreate, current_user: User = Depends(ge
     db.refresh(db_alloc)
     return db_alloc
 
-# Resources Routes
+
+# ─── Resource Routes ───────────────────────────────────────────────────────────
+
 @app.get("/api/resources", response_model=List[Resource])
-def get_resources(db: Session = Depends(get_session)):
+def get_resources(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     return db.exec(select(Resource)).all()
 
 @app.get("/api/resources/bookings", response_model=List[Booking])
-def get_bookings(db: Session = Depends(get_session)):
+def get_bookings(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     return db.exec(select(Booking)).all()
 
 @app.post("/api/resources/bookings", response_model=Booking)
@@ -330,7 +403,7 @@ def create_booking(booking_data: BookingCreate, current_user: User = Depends(get
     db_resource = db.get(Resource, booking_data.resource_id)
     if not db_resource:
         raise HTTPException(status_code=404, detail="Resource not found")
-    
+
     db_booking = Booking(
         resource_id=booking_data.resource_id,
         employee_name=booking_data.employee_name,
@@ -340,11 +413,10 @@ def create_booking(booking_data: BookingCreate, current_user: User = Depends(get
         status="APPROVED"
     )
     db.add(db_booking)
-    
-    # Update Resource status to booked (if it's booked now)
+
     db_resource.status = "BOOKED"
     db.add(db_resource)
-    
+
     log = ActivityLog(
         username=current_user.username,
         action="CREATE_BOOKING",
@@ -358,9 +430,49 @@ def create_booking(booking_data: BookingCreate, current_user: User = Depends(get
     db.refresh(db_booking)
     return db_booking
 
-# Maintenance Routes
+@app.delete("/api/resources/bookings/{booking_id}")
+def cancel_booking(booking_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    """BUG FIX #6: Release the resource back to AVAILABLE when a booking is cancelled."""
+    db_booking = db.get(Booking, booking_id)
+    if not db_booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    # Cancel the booking
+    db_booking.status = "CANCELLED"
+    db.add(db_booking)
+
+    # Release resource — only if no other active bookings exist for this resource
+    other_active = db.exec(
+        select(Booking).where(
+            Booking.resource_id == db_booking.resource_id,
+            Booking.id != booking_id,
+            Booking.status == "APPROVED"
+        )
+    ).first()
+
+    if not other_active:
+        db_resource = db.get(Resource, db_booking.resource_id)
+        if db_resource and db_resource.status == "BOOKED":
+            db_resource.status = "AVAILABLE"
+            db.add(db_resource)
+
+    log = ActivityLog(
+        username=current_user.username,
+        action="CANCEL_BOOKING",
+        entity_type="RESOURCE",
+        entity_id=str(db_booking.resource_id),
+        timestamp=datetime.utcnow().isoformat(),
+        details=f"Booking #{booking_id} cancelled. Resource released."
+    )
+    db.add(log)
+    db.commit()
+    return {"status": "success", "booking_id": booking_id}
+
+
+# ─── Maintenance Routes ────────────────────────────────────────────────────────
+
 @app.get("/api/maintenance", response_model=List[MaintenanceTicket])
-def get_maintenance(db: Session = Depends(get_session)):
+def get_maintenance(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     return db.exec(select(MaintenanceTicket)).all()
 
 @app.post("/api/maintenance", response_model=MaintenanceTicket)
@@ -368,7 +480,7 @@ def create_maintenance(maint_data: MaintenanceCreate, current_user: User = Depen
     db_asset = db.get(Asset, maint_data.asset_id)
     if not db_asset:
         raise HTTPException(status_code=404, detail="Asset not found")
-        
+
     db_ticket = MaintenanceTicket(
         asset_id=maint_data.asset_id,
         description=maint_data.description,
@@ -378,11 +490,10 @@ def create_maintenance(maint_data: MaintenanceCreate, current_user: User = Depen
         cost=maint_data.cost
     )
     db.add(db_ticket)
-    
-    # Set asset status to MAINTENANCE
+
     db_asset.status = "MAINTENANCE"
     db.add(db_asset)
-    
+
     log = ActivityLog(
         username=current_user.username,
         action="LOG_MAINTENANCE",
@@ -397,21 +508,34 @@ def create_maintenance(maint_data: MaintenanceCreate, current_user: User = Depen
     return db_ticket
 
 @app.put("/api/maintenance/{ticket_id}", response_model=MaintenanceTicket)
-def update_maintenance(ticket_id: int, ticket_status: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+def update_maintenance(
+    ticket_id: int,
+    # BUG FIX #1: Accept status via validated query param (backward compat with frontend).
+    ticket_status: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    # Validate allowed status values
+    allowed_statuses = {"PENDING", "IN_PROGRESS", "COMPLETED"}
+    if ticket_status not in allowed_statuses:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid status '{ticket_status}'. Must be one of: {sorted(allowed_statuses)}"
+        )
+
     ticket = db.get(MaintenanceTicket, ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-    
+
     ticket.status = ticket_status
     db.add(ticket)
-    
-    # If completed, set asset back to active
+
     if ticket_status == "COMPLETED":
         asset = db.get(Asset, ticket.asset_id)
         if asset:
             asset.status = "ACTIVE"
             db.add(asset)
-            
+
     log = ActivityLog(
         username=current_user.username,
         action="UPDATE_MAINTENANCE",
@@ -425,9 +549,11 @@ def update_maintenance(ticket_id: int, ticket_status: str, current_user: User = 
     db.refresh(ticket)
     return ticket
 
-# Audits Routes
+
+# ─── Audit Routes ──────────────────────────────────────────────────────────────
+
 @app.get("/api/audits", response_model=List[Audit])
-def get_audits(db: Session = Depends(get_session)):
+def get_audits(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     return db.exec(select(Audit)).all()
 
 @app.post("/api/audits", response_model=Audit)
@@ -435,7 +561,7 @@ def create_audit(audit_data: AuditCreate, current_user: User = Depends(get_curre
     existing = db.get(Audit, audit_data.id)
     if existing:
         raise HTTPException(status_code=400, detail="Audit ID already exists")
-        
+
     db_audit = Audit(
         id=audit_data.id,
         title=audit_data.title,
@@ -444,7 +570,7 @@ def create_audit(audit_data: AuditCreate, current_user: User = Depends(get_curre
         status="ACTIVE"
     )
     db.add(db_audit)
-    
+
     log = ActivityLog(
         username=current_user.username,
         action="CREATE_AUDIT",
@@ -459,44 +585,52 @@ def create_audit(audit_data: AuditCreate, current_user: User = Depends(get_curre
     return db_audit
 
 @app.put("/api/audits/{audit_id}", response_model=Audit)
-def complete_audit(audit_id: str, results: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+def complete_audit(
+    audit_id: str,
+    # BUG FIX #2: Accept results via JSON body — query strings break with special characters
+    # and have URL length limits that can silently truncate long audit findings.
+    body: AuditComplete,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
     audit = db.get(Audit, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
-        
+
     audit.status = "COMPLETED"
-    audit.results = results
+    audit.results = body.results
     db.add(audit)
-    
+
     log = ActivityLog(
         username=current_user.username,
         action="COMPLETE_AUDIT",
         entity_type="AUDIT",
         entity_id=audit_id,
         timestamp=datetime.utcnow().isoformat(),
-        details=f"Audit '{audit.title}' ({audit_id}) marked completed with results: {results}"
+        details=f"Audit '{audit.title}' ({audit_id}) marked completed"
     )
     db.add(log)
     db.commit()
     db.refresh(audit)
     return audit
 
-# Organization Setup Routes
+
+# ─── Organization Routes ───────────────────────────────────────────────────────
+
 @app.get("/api/organization/departments", response_model=List[Department])
-def get_departments(db: Session = Depends(get_session)):
+def get_departments(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     return db.exec(select(Department)).all()
 
 @app.post("/api/organization/departments", response_model=Department)
 def create_department(dept_data: DepartmentCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     db_dept = Department(**dept_data.dict())
     db.add(db_dept)
-    
-    # Update Org metrics
+
     org = db.exec(select(Organization)).first()
     if org:
         org.department_count += 1
         db.add(org)
-        
+
     log = ActivityLog(
         username=current_user.username,
         action="CREATE_DEPT",
@@ -511,17 +645,99 @@ def create_department(dept_data: DepartmentCreate, current_user: User = Depends(
     return db_dept
 
 @app.get("/api/organization/metrics")
-def get_org_metrics(db: Session = Depends(get_session)):
+def get_org_metrics(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
     org = db.exec(select(Organization)).first()
     if not org:
-        # Create default organization if none exists
         org = Organization(name="AssetFlow Enterprise", department_count=6, employee_count=296)
         db.add(org)
         db.commit()
         db.refresh(org)
     return org
 
-# Activity Log Routes
+
+# ─── Activity Log Routes ───────────────────────────────────────────────────────
+
 @app.get("/api/activity", response_model=List[ActivityLog])
-def get_activity(db: Session = Depends(get_session)):
-    return db.exec(select(ActivityLog).order_by(ActivityLog.timestamp.desc())).all()
+def get_activity(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    # BUG FIX #5: Order by id DESC (auto-increment integer) — reliable insertion order,
+    # avoids broken sort when timestamp strings have inconsistent formats.
+    return db.exec(select(ActivityLog).order_by(ActivityLog.id.desc())).all()
+
+
+# ─── Support Ticket Routes ─────────────────────────────────────────────────────
+# BUG FIX #10: SupportTicket model existed but had no routes. Added full CRUD.
+
+@app.get("/api/support", response_model=List[SupportTicket])
+def get_support_tickets(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    if current_user.role == "ADMIN":
+        return db.exec(select(SupportTicket).order_by(SupportTicket.id.desc())).all()
+    # Non-admins only see their own tickets
+    return db.exec(select(SupportTicket).where(SupportTicket.username == current_user.username).order_by(SupportTicket.id.desc())).all()
+
+@app.post("/api/support", response_model=SupportTicket)
+def create_support_ticket(ticket_data: SupportTicketCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    db_ticket = SupportTicket(
+        subject=ticket_data.subject,
+        message=ticket_data.message,
+        priority=ticket_data.priority,
+        username=current_user.username,
+        status="OPEN"
+    )
+    db.add(db_ticket)
+    db.commit()
+    db.refresh(db_ticket)
+    return db_ticket
+
+@app.put("/api/support/{ticket_id}/reply", response_model=SupportTicket)
+def reply_support_ticket(ticket_id: int, body: SupportTicketReply, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can reply to support tickets.")
+    ticket = db.get(SupportTicket, ticket_id)
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    ticket.reply = body.reply
+    ticket.status = "RESOLVED"
+    db.add(ticket)
+    db.commit()
+    db.refresh(ticket)
+    return ticket
+
+
+# ─── Notification Routes ───────────────────────────────────────────────────────
+# BUG FIX #10: Notification model existed but had no routes. Added full CRUD.
+
+@app.get("/api/notifications", response_model=List[Notification])
+def get_notifications(current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    return db.exec(
+        select(Notification)
+        .where(Notification.username == current_user.username)
+        .order_by(Notification.id.desc())
+    ).all()
+
+@app.post("/api/notifications", response_model=Notification)
+def create_notification(notif_data: NotificationCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Only admins can broadcast notifications.")
+    db_notif = Notification(
+        title=notif_data.title,
+        message=notif_data.message,
+        category=notif_data.category,
+        username=notif_data.username,
+        is_read=False
+    )
+    db.add(db_notif)
+    db.commit()
+    db.refresh(db_notif)
+    return db_notif
+
+@app.put("/api/notifications/{notif_id}/read")
+def mark_notification_read(notif_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_session)):
+    notif = db.get(Notification, notif_id)
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    if notif.username != current_user.username:
+        raise HTTPException(status_code=403, detail="Cannot mark another user's notification as read.")
+    notif.is_read = True
+    db.add(notif)
+    db.commit()
+    return {"status": "success"}
