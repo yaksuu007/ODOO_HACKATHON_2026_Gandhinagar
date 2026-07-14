@@ -2,13 +2,6 @@
   "buildCommand": "bash scripts/vercel-build.sh",
   "installCommand": "npm install",
   "framework": null,
-  "regions": ["iad1"],
-  "functions": {
-    "apps/api/**/*.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
